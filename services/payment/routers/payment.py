@@ -11,16 +11,14 @@ router = APIRouter()
 async def hold_payment(
     req: PaymentHoldRequest,
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
-    producer=Depends(None)
+    session: Session = Depends(get_session)
 ):
     """Simulate holding payment in escrow for an offer."""
     repo = PaymentRepository(session)
     payment = await repo.hold_payment(req.offer_id, req.amount)
 
-    # Emit event via producer if available
-    if producer:
-        await producer.payment_held(payment.id, payment.offer_id, payment.amount)
+    # TODO: Emit event via producer if available
+    # await producer.payment_held(payment.id, payment.offer_id, payment.amount)
 
     return PaymentResponse(
         id=payment.id,
@@ -35,16 +33,15 @@ async def hold_payment(
 async def release_payment(
     payment_id: int,
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
-    producer=Depends(None)
+    session: Session = Depends(get_session)
 ):
     repo = PaymentRepository(session)
     payment = await repo.release_payment(payment_id)
     if not payment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
 
-    if producer:
-        await producer.payment_released(payment.id, payment.offer_id, payment.amount)
+    # TODO: Emit event via producer if available
+    # await producer.payment_released(payment.id, payment.offer_id, payment.amount)
 
     return PaymentResponse(
         id=payment.id,

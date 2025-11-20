@@ -5,6 +5,7 @@ import pytest
 import os
 import sys
 from typing import Generator
+import uuid
 
 # Add app root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -47,33 +48,46 @@ def listing_client_fixture():
 
 
 @pytest.fixture(name="offer_client")
-def offer_client_fixture():
-    """HTTP client for offer service"""
-    return httpx.Client(base_url="http://localhost:8003", timeout=30.0)
+def offer_client_fixture(auth_client):
+    """HTTP client for offer service with auth header"""
+    # For now, use simple X-User-Id header (simpler than JWT for local testing)
+    # In production, this would use proper JWT tokens
+    return httpx.Client(
+        base_url="http://localhost:8003",
+        timeout=30.0,
+        headers={"X-User-Id": "1"}  # Simple user ID for testing
+    )
 
 
 @pytest.fixture(name="payment_client")
-def payment_client_fixture():
-    """HTTP client for payment service"""
-    return httpx.Client(base_url="http://localhost:8004", timeout=30.0)
+def payment_client_fixture(auth_client):
+    """HTTP client for payment service with auth header"""
+    # For now, use simple X-User-Id header
+    return httpx.Client(
+        base_url="http://localhost:8004",
+        timeout=30.0,
+        headers={"X-User-Id": "1"}  # Simple user ID for testing
+    )
 
 
 @pytest.fixture
 def test_user_data():
-    """Test user credentials"""
+    """Test user credentials with unique email each time"""
+    unique_id = str(uuid.uuid4())[:8]
     return {
-        "email": "testuser@example.com",
-        "username": "testuser",
+        "email": f"testuser_{unique_id}@example.com",
+        "username": f"testuser_{unique_id}",
         "password": "SecurePassword123!"
     }
 
 
 @pytest.fixture
 def test_seller_data():
-    """Test seller credentials"""
+    """Test seller credentials with unique email each time"""
+    unique_id = str(uuid.uuid4())[:8]
     return {
-        "email": "seller@example.com",
-        "username": "seller",
+        "email": f"seller_{unique_id}@example.com",
+        "username": f"seller_{unique_id}",
         "password": "SellerPass123!"
     }
 
@@ -96,6 +110,8 @@ def test_offer_data():
     """Test offer data"""
     return {
         "listing_id": 1,
+        "buyer_id": 1,
+        "seller_id": 2,
         "type": "direct_buy",
         "price": 150.0,
         "message": "I'm interested in buying this item"
@@ -107,6 +123,5 @@ def test_payment_data():
     """Test payment data"""
     return {
         "offer_id": 1,
-        "amount": 150.0,
-        "payment_method": "credit_card"
+        "amount": 150.0
     }
