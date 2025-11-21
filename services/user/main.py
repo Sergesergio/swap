@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List
 
 from models import Profile, Wallet, Rating
-from repository.database import get_session
+from repository.database import get_session, init_db
 from repository.profile_repository import ProfileRepository
 from repository.wallet_repository import WalletRepository
 from repository.rating_repository import RatingRepository
@@ -22,6 +22,10 @@ user_producer = None
 @app.on_event("startup")
 async def startup_event():
     global user_consumer, user_producer
+    
+    # Initialize database tables
+    init_db()
+    
     user_consumer = UserEventConsumer()
     user_producer = UserEventProducer()
     await user_consumer.start()

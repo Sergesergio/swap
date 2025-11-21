@@ -11,7 +11,7 @@ from models import (
     ListingResponse,
     ListingCreate
 )
-from repository.database import get_session
+from repository.database import get_session, init_db
 from repository.category_repository import CategoryRepository
 from repository.listing_repository import ListingRepository
 from utils.storage import MinioStorage
@@ -38,6 +38,10 @@ listing_producer = None
 @app.on_event("startup")
 async def startup_event():
     global listing_consumer, listing_producer
+    
+    # Initialize database tables
+    init_db()
+    
     # Initialize MinIO
     await storage.create_bucket()
     
@@ -59,12 +63,12 @@ async def create_category(
     session: Session = Depends(get_session)
 ):
     repository = CategoryRepository(session)
-    return await repository.create(category)
+    return repository.create(category)
 
 @app.get("/categories", response_model=List[Category])
 async def get_categories(session: Session = Depends(get_session)):
     repository = CategoryRepository(session)
-    return await repository.get_all()
+    return repository.get_all()
 
 @app.get("/categories/{category_id}", response_model=Category)
 async def get_category(
@@ -72,7 +76,7 @@ async def get_category(
     session: Session = Depends(get_session)
 ):
     repository = CategoryRepository(session)
-    category = await repository.get_by_id(category_id)
+    category = repository.get_by_id(category_id)
     if not category:
         raise ResourceNotFound(f"Category {category_id} not found")
     return category
@@ -121,7 +125,7 @@ async def search_listings(
     session: Session = Depends(get_session)
 ):
     repository = ListingRepository(session)
-    return await repository.search(
+    return repository.search(
         query,
         category_id,
         min_price,
@@ -135,12 +139,12 @@ async def get_listing(
     session: Session = Depends(get_session)
 ):
     repository = ListingRepository(session)
-    listing = await repository.get_by_id(listing_id)
+    listing = repository.get_by_id(listing_id)
     if not listing:
         raise ResourceNotFound(f"Listing {listing_id} not found")
     
     # Increment views
-    await repository.increment_views(listing_id)
+    repository.increment_views(listing_id)
     return listing
 
 @app.put("/listings/{listing_id}", response_model=ListingResponse)
@@ -150,7 +154,7 @@ async def update_listing(
     session: Session = Depends(get_session)
 ):
     repository = ListingRepository(session)
-    listing = await repository.update(listing_id, listing_update)
+    listing = repository.update(listing_id, listing_update)
     if not listing:
         raise ResourceNotFound(f"Listing {listing_id} not found")
     return listing
@@ -161,7 +165,7 @@ async def delete_listing(
     session: Session = Depends(get_session)
 ):
     repository = ListingRepository(session)
-    success = await repository.delete(listing_id)
+    success = repository.delete(listing_id)
     if not success:
         raise ResourceNotFound(f"Listing {listing_id} not found")
     return {"message": "Listing deleted successfully"}

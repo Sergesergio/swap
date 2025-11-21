@@ -7,15 +7,15 @@ class ListingRepository:
     def __init__(self, session: Session):
         self.session = session
     
-    async def create(
+    def create(
         self,
         listing: Listing,
         images: List[str] = None,
         tags: List[str] = None
     ) -> Listing:
         self.session.add(listing)
-        await self.session.commit()
-        await self.session.refresh(listing)
+        self.session.commit()
+        self.session.refresh(listing)
         
         # Add images if provided
         if images:
@@ -36,31 +36,31 @@ class ListingRepository:
                 )
                 self.session.add(tag)
         
-        await self.session.commit()
+        self.session.commit()
         return listing
     
-    async def get_by_id(self, listing_id: int) -> Optional[Listing]:
+    def get_by_id(self, listing_id: int) -> Optional[Listing]:
         statement = select(Listing).where(Listing.id == listing_id)
-        result = await self.session.execute(statement)
+        result = self.session.execute(statement)
         return result.scalar_one_or_none()
     
-    async def get_by_user_id(self, user_id: int) -> List[Listing]:
+    def get_by_user_id(self, user_id: int) -> List[Listing]:
         statement = select(Listing).where(
             Listing.user_id == user_id,
             Listing.status != "deleted"
         )
-        result = await self.session.execute(statement)
+        result = self.session.execute(statement)
         return result.scalars().all()
     
-    async def get_by_category(self, category_id: int) -> List[Listing]:
+    def get_by_category(self, category_id: int) -> List[Listing]:
         statement = select(Listing).where(
             Listing.category_id == category_id,
             Listing.status == "active"
         )
-        result = await self.session.execute(statement)
+        result = self.session.execute(statement)
         return result.scalars().all()
     
-    async def search(
+    def search(
         self,
         query: str = None,
         category_id: int = None,
@@ -88,11 +88,11 @@ class ListingRepository:
         if condition:
             statement = statement.where(Listing.condition == condition)
         
-        result = await self.session.execute(statement)
+        result = self.session.execute(statement)
         return result.scalars().all()
     
-    async def update(self, listing_id: int, listing_update: Listing) -> Optional[Listing]:
-        listing = await self.get_by_id(listing_id)
+    def update(self, listing_id: int, listing_update: Listing) -> Optional[Listing]:
+        listing = self.get_by_id(listing_id)
         if not listing:
             return None
         
@@ -100,25 +100,25 @@ class ListingRepository:
             setattr(listing, key, value)
         
         listing.updated_at = datetime.utcnow()
-        await self.session.commit()
-        await self.session.refresh(listing)
+        self.session.commit()
+        self.session.refresh(listing)
         return listing
     
-    async def delete(self, listing_id: int) -> bool:
-        listing = await self.get_by_id(listing_id)
+    def delete(self, listing_id: int) -> bool:
+        listing = self.get_by_id(listing_id)
         if not listing:
             return False
         
         listing.status = "deleted"
         listing.updated_at = datetime.utcnow()
-        await self.session.commit()
+        self.session.commit()
         return True
     
-    async def increment_views(self, listing_id: int) -> bool:
-        listing = await self.get_by_id(listing_id)
+    def increment_views(self, listing_id: int) -> bool:
+        listing = self.get_by_id(listing_id)
         if not listing:
             return False
         
         listing.views += 1
-        await self.session.commit()
+        self.session.commit()
         return True
