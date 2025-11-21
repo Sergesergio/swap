@@ -32,15 +32,18 @@ app.add_middleware(
 
 # Initialize services
 storage = MinioStorage()
-listing_consumer = ListingEventConsumer()
-listing_producer = ListingEventProducer()
+listing_consumer = None
+listing_producer = None
 
 @app.on_event("startup")
 async def startup_event():
+    global listing_consumer, listing_producer
     # Initialize MinIO
     await storage.create_bucket()
     
-    # Start event handlers
+    # Start event handlers (create them now in async context)
+    listing_consumer = ListingEventConsumer()
+    listing_producer = ListingEventProducer()
     await listing_consumer.start()
     await listing_producer.start()
 

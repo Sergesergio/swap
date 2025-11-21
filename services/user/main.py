@@ -15,12 +15,15 @@ from events.producer import UserEventProducer
 
 app = FastAPI(title="User Service")
 
-# Initialize event handlers
-user_consumer = UserEventConsumer()
-user_producer = UserEventProducer()
+# Initialize event handlers (lazy - will be created in startup_event)
+user_consumer = None
+user_producer = None
 
 @app.on_event("startup")
 async def startup_event():
+    global user_consumer, user_producer
+    user_consumer = UserEventConsumer()
+    user_producer = UserEventProducer()
     await user_consumer.start()
     await user_producer.start()
 

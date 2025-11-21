@@ -4,6 +4,7 @@ from repository.user_repository import UserRepository
 from sqlmodel import Session
 from repository.database import get_session
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +15,30 @@ class UserEventConsumer:
             group_id="user-service",
             topics=["user.created", "user.verified"]
         )
+        self.running = False
     
     async def start(self):
-        # Register handlers
-        self.consumer.add_handler("user.created", self.handle_user_created)
-        self.consumer.add_handler("user.verified", self.handle_user_verified)
         await self.consumer.start()
+        self.running = True
+        # Start processing messages in background
+        asyncio.create_task(self._process_messages())
     
     async def stop(self):
+        self.running = False
         await self.consumer.stop()
+    
+    async def _process_messages(self):
+        """Process messages from Kafka topics"""
+        try:
+            async for msg in self.consumer:
+                if msg.topic == "user.created":
+                    await self.handle_user_created(msg.value)
+                elif msg.topic == "user.verified":
+                    await self.handle_user_verified(msg.value)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logger.error(f"Error processing messages: {e}")
     
     async def handle_user_created(self, data: dict):
         try:

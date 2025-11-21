@@ -4,6 +4,7 @@ from repository.listing_repository import ListingRepository
 from sqlmodel import Session
 from repository.database import get_session
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +15,30 @@ class ListingEventConsumer:
             group_id="listing-service",
             topics=["user.verified", "offer.accepted"]
         )
+        self.running = False
     
     async def start(self):
-        # Register handlers
-        self.consumer.add_handler("user.verified", self.handle_user_verified)
-        self.consumer.add_handler("offer.accepted", self.handle_offer_accepted)
         await self.consumer.start()
+        self.running = True
+        # Start processing messages in background
+        asyncio.create_task(self._process_messages())
     
     async def stop(self):
+        self.running = False
         await self.consumer.stop()
+    
+    async def _process_messages(self):
+        """Process messages from Kafka topics"""
+        try:
+            async for msg in self.consumer:
+                if msg.topic == "user.verified":
+                    await self.handle_user_verified(msg.value)
+                elif msg.topic == "offer.accepted":
+                    await self.handle_offer_accepted(msg.value)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logger.error(f"Error processing messages: {e}")
     
     async def handle_user_verified(self, data: dict):
         """When a user is verified, update their listings to show verified status"""
