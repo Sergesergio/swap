@@ -113,6 +113,28 @@ services:
       timeout: 10s
       retries: 3
 
+  user:
+    build:
+      context: .
+      dockerfile: services/user/Dockerfile
+    ports:
+      - "8001:8000"
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      - DATABASE_URL=postgresql://swap_user:swap_password@postgres:5432/users
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - PYTHONPATH=/app
+    volumes:
+      - ./services/user:/app/services/user
+      - ./shared:/app/shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   offer:
     build:
       context: .
@@ -131,6 +153,28 @@ services:
       - ./shared:/app/shared
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  listing:
+    build:
+      context: .
+      dockerfile: services/listing/Dockerfile
+    ports:
+      - "8002:8000"
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      - DATABASE_URL=postgresql://swap_user:swap_password@postgres:5432/listings
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - PYTHONPATH=/app
+    volumes:
+      - ./services/listing:/app/services/listing
+      - ./shared:/app/shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3

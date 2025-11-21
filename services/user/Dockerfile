@@ -13,8 +13,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
-COPY services/user /app
+COPY services/user /app/services/user
 COPY shared /app/shared
 
+# Set PYTHONPATH and working directory
+ENV PYTHONPATH=/app
+WORKDIR /app/services/user
+
 # Run service
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
