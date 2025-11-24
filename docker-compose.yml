@@ -260,7 +260,39 @@ services:
       timeout: 10s
       retries: 3
 
+  admin:
+    build:
+      context: .
+      dockerfile: services/admin/Dockerfile
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_NAME=admin
+      - DB_USER=swap_user
+      - DB_PASSWORD=swap_password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DEBUG=False
+      - DJANGO_SECRET_KEY=django-insecure-swap-admin-key-change-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1,admin,0.0.0.0
+    volumes:
+      - ./services/admin:/app
+      - admin_staticfiles:/app/staticfiles
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: >
+      sh -c "python manage.py migrate && 
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8005 --workers 4 config.wsgi:application"
+
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  admin_staticfiles:
