@@ -10,23 +10,29 @@ import uuid
 # Add app root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from sqlmodel import SQLModel, Session, create_engine
-from sqlmodel.pool import StaticPool
+try:
+    from sqlmodel import SQLModel, Session, create_engine
+    from sqlmodel.pool import StaticPool
+    SQLMODEL_AVAILABLE = True
+except ImportError:
+    SQLMODEL_AVAILABLE = False
+
 import httpx
 
 
-# Use SQLite in-memory for tests
-@pytest.fixture(name="session")
-def session_fixture():
-    """Create in-memory SQLite database for testing"""
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
+# Use SQLite in-memory for tests (only if sqlmodel is available)
+if SQLMODEL_AVAILABLE:
+    @pytest.fixture(name="session")
+    def session_fixture():
+        """Create in-memory SQLite database for testing"""
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        SQLModel.metadata.create_all(engine)
+        with Session(engine) as session:
+            yield session
 
 
 @pytest.fixture(name="auth_client")
