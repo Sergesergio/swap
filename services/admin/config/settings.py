@@ -18,6 +18,8 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,admin').split(',
 
 # Application definition
 INSTALLED_APPS = [
+    'admin_interface',
+    'colorfield',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -187,3 +189,35 @@ CORS_ALLOWED_ORIGINS = [
 # Admin site customization
 ADMIN_TITLE = 'Swap Platform Administration'
 ADMIN_HEADER = 'Swap Admin Dashboard'
+
+# Django Admin Interface Configuration
+ADMIN_INTERFACE = {
+    'HEADER': {
+        'title': 'Swap Admin',
+        'subtitle': 'Platform Administration',
+        'logo_path': 'admin_interface/img/logo.svg',
+        'avatar_path': '',
+    },
+    'MENU': {
+        'PINNED_APPS': ['dashboard', 'auth'],
+        'APPS_ORDER': ['dashboard', 'auth', 'admin'],
+    },
+    'MISC': {
+        'SHOW_FOOTER_ADMIN_USERSESSIONS': False,
+        'SHOW_FOOTER_POWEREDBY': False,
+        'SHOW_CHANGELIST_FILTERS': True,
+        'SHOW_SEARCH_BAR': True,
+        'ENVIRONMENT': 'production',
+        'QUERY_FILTERS_UI': 'advanced',
+        'MENU_ICON_STYLE': 'bootstrap',
+        'ADMIN_USERSESSIONS_MAX': 1,
+        'THEME': 'dark',
+        'ENABLE_THEME_TOGGLE': True,
+    },
+    'THEME': {
+        'ADMIN_PRIMARY_COLOR': '#2c3e50',
+        'ADMIN_SECONDARY_COLOR': '#3498db',
+        'ADMIN_ACCENT_COLOR': '#e74c3c',
+    }
+}
+
