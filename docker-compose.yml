@@ -321,28 +321,28 @@ services:
     restart: unless-stopped
 
   # ==================== FRONTEND ====================
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080
-      NEXT_PUBLIC_SOCKET_URL: ws://localhost:8080
-      NODE_ENV: production
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    networks:
-      - default
-    restart: unless-stopped
-    labels:
-      service: frontend
-      version: "1.0.0"
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     NEXT_PUBLIC_API_URL: http://localhost:8080
+  #     NEXT_PUBLIC_SOCKET_URL: ws://localhost:8080
+  #     NODE_ENV: production
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 60s
+  #   networks:
+  #     - default
+  #   restart: unless-stopped
+  #   labels:
+  #     service: frontend
+  #     version: "1.0.0"
 
 volumes:
   postgres_data:
